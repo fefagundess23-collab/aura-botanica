@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Product, BrandSettings, ProductFormData, NotificationToast } from './types';
+import { Product, BrandSettings, ProductFormData, NotificationToast, Category } from './types';
 import { DEFAULT_BRAND_SETTINGS } from './data/initialData';
 import {
   subscribeToProducts,
@@ -14,6 +14,11 @@ import {
   subscribeToBrandSettings,
   saveBrandSettings,
 } from './services/settingsService';
+import {
+  subscribeToCategories,
+  addCategory,
+  ensureDefaultCategories,
+} from './services/categoriesService';
 import { testFirestoreConnection } from './firebase';
 
 // Public Components
@@ -32,6 +37,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ProductFormModal } from './components/admin/ProductFormModal';
 import { DeleteConfirmModal } from './components/admin/DeleteConfirmModal';
 import { BrandSettingsModal } from './components/admin/BrandSettingsModal';
+import { CategoryModal } from './components/admin/CategoryModal';
 
 function MainApp() {
   const { user, isAdmin } = useAuth();
@@ -44,6 +50,7 @@ function MainApp() {
   const [productsLoading, setProductsLoading] = useState<boolean>(true);
   const [productsError, setProductsError] = useState<Error | null>(null);
 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [brandSettings, setBrandSettings] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
 
   // Modals state
@@ -54,6 +61,7 @@ function MainApp() {
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [brandSettingsModalOpen, setBrandSettingsModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
   // Toast feedback state
   const [toasts, setToasts] = useState<NotificationToast[]>([]);
@@ -104,11 +112,46 @@ function MainApp() {
       }
     );
 
+    const unsubCategories = subscribeToCategories(
+      (newCategories) => {
+        setCategories(newCategories);
+      },
+      (err) => {
+        console.warn('Erro nas categorias:', err);
+      }
+    );
+
     return () => {
       unsubProducts();
       unsubSettings();
+      unsubCategories();
     };
   }, []);
+
+  // Ensure default categories exist if collection is empty
+  useEffect(() => {
+    if (isAdmin && !productsLoading && categories.length === 0) {
+      const existingProductCategories = products.map((p) => p.categoria || '');
+      ensureDefaultCategories(existingProductCategories).catch((err) => {
+        console.warn('Inicialização automática de categorias:', err);
+      });
+    }
+  }, [isAdmin, productsLoading, categories.length, products]);
+
+  // Category Actions
+  const handleAddCategory = async (nome: string) => {
+    try {
+      await addCategory(nome);
+      addToast(
+        `A categoria "${nome}" foi cadastrada com sucesso!`,
+        'success',
+        'Categoria Criada'
+      );
+    } catch (err: any) {
+      addToast(err.message || 'Erro ao criar categoria.', 'error', 'Falha ao Cadastrar');
+      throw err;
+    }
+  };
 
   // CRUD Actions
   const handleSaveProduct = async (data: ProductFormData) => {
@@ -206,6 +249,7 @@ function MainApp() {
         {currentView === 'admin' && isAdmin ? (
           <AdminDashboard
             products={products}
+            categories={categories}
             brandSettings={brandSettings}
             onOpenAddModal={() => {
               setProductToEdit(null);
@@ -221,6 +265,7 @@ function MainApp() {
             }}
             onToggleAvailability={handleToggleAvailability}
             onOpenSettingsModal={() => setBrandSettingsModalOpen(true)}
+            onOpenAddCategoryModal={() => setCategoryModalOpen(true)}
             onSeedInitialData={handleSeedData}
             onNavigateToPublic={() => setCurrentView('public')}
           />
@@ -229,6 +274,7 @@ function MainApp() {
             <Hero brandSettings={brandSettings} />
             <ProductCatalog
               products={products}
+              categories={categories}
               brandSettings={brandSettings}
               loading={productsLoading}
               error={productsError}
@@ -271,11 +317,20 @@ function MainApp() {
       <ProductFormModal
         isOpen={productFormModalOpen}
         productToEdit={productToEdit}
+        categories={categories}
         onClose={() => {
           setProductFormModalOpen(false);
           setProductToEdit(null);
         }}
         onSave={handleSaveProduct}
+      />
+
+      {/* Category Creation Modal */}
+      <CategoryModal
+        isOpen={categoryModalOpen}
+        existingCategories={categories}
+        onClose={() => setCategoryModalOpen(false)}
+        onSave={handleAddCategory}
       />
 
       {/* Delete Confirmation Modal */}

@@ -118,6 +118,24 @@
         }
       },
       "required": ["email", "role"]
+    },
+    "Category": {
+      "title": "Categoria",
+      "description": "Categoria de classificação para os produtos artesanais.",
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string",
+          "description": "Nome da categoria (ex: Velas Botânicas, Aromaterapia).",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp de criação da categoria."
+        }
+      },
+      "required": ["nome", "createdAt"]
     }
   },
   "firestore": {
@@ -126,6 +144,12 @@
         "$ref": "#/entities/Product"
       },
       "description": "Catálogo completo de produtos da marca."
+    },
+    "/categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Coleção de categorias criadas dinamicamente para os produtos."
     },
     "/settings/{settingId}": {
       "schema": {

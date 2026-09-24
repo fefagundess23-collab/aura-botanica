@@ -16,31 +16,36 @@ import {
   Database,
   ArrowUpDown,
   Filter,
+  Tag,
 } from 'lucide-react';
-import { Product, BrandSettings } from '../../types';
+import { Product, BrandSettings, Category } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 
 interface AdminDashboardProps {
   products: Product[];
+  categories: Category[];
   brandSettings: BrandSettings;
   onOpenAddModal: () => void;
   onOpenEditModal: (product: Product) => void;
   onOpenDeleteModal: (product: Product) => void;
   onToggleAvailability: (product: Product) => void;
   onOpenSettingsModal: () => void;
+  onOpenAddCategoryModal: () => void;
   onSeedInitialData: () => Promise<void>;
   onNavigateToPublic: () => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   products,
+  categories,
   brandSettings,
   onOpenAddModal,
   onOpenEditModal,
   onOpenDeleteModal,
   onToggleAvailability,
   onOpenSettingsModal,
+  onOpenAddCategoryModal,
   onSeedInitialData,
   onNavigateToPublic,
 }) => {
@@ -55,13 +60,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const availableCount = products.filter((p) => p.disponivel).length;
   const unavailableCount = totalProducts - availableCount;
 
-  const categories = useMemo(() => {
+  // Combine Firestore categories with any category on existing products
+  const categoryNames = useMemo(() => {
     const set = new Set<string>();
+    categories.forEach((c) => {
+      if (c.nome && c.nome.trim()) set.add(c.nome.trim());
+    });
     products.forEach((p) => {
-      if (p.categoria) set.add(p.categoria);
+      if (p.categoria && p.categoria.trim()) set.add(p.categoria.trim());
     });
     return Array.from(set);
-  }, [products]);
+  }, [categories, products]);
 
   // Filtered list
   const filteredProducts = useMemo(() => {
@@ -185,9 +194,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span className="text-[11px] uppercase tracking-wider text-[#6B665E] font-medium block">
                 Categorias Ativas
               </span>
-              <span className="text-2xl font-bold text-[#8C6239]">{categories.length}</span>
+              <span className="text-2xl font-bold text-[#8C6239]">{categoryNames.length}</span>
             </div>
           </div>
+        </div>
+
+        {/* Seção Categorias */}
+        <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#E8E2D8] shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Tag className="w-4 h-4 text-[#8C6239]" />
+                <span className="text-[11px] uppercase tracking-widest text-[#8C6239] font-bold">
+                  Gerenciamento do Catálogo
+                </span>
+              </div>
+              <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#233428]">
+                Categorias
+              </h2>
+              <p className="text-xs text-[#6B665E]">
+                Crie e visualize as categorias dinâmicas utilizadas no cadastro de produtos e nos filtros da loja.
+              </p>
+            </div>
+
+            <button
+              onClick={onOpenAddCategoryModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#233428] hover:bg-[#374D3D] text-[#FBF9F5] text-xs font-semibold tracking-wide shadow-sm hover:shadow transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="w-4 h-4 text-[#86EFAC]" />
+              <span>+ Nova categoria</span>
+            </button>
+          </div>
+
+          {/* Categorias Grid / Badges */}
+          {categories.length === 0 ? (
+            <div className="p-6 text-center rounded-2xl bg-[#FBF9F5] border border-dashed border-[#D4CBBD]">
+              <p className="text-xs text-[#6B665E]">
+                Nenhuma categoria criada ainda no Firestore. Clique em <strong>"+ Nova categoria"</strong> para cadastrar a primeira.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {categories.map((cat) => {
+                const count = products.filter(
+                  (p) => p.categoria?.toLowerCase() === cat.nome.toLowerCase()
+                ).length;
+                return (
+                  <div
+                    key={cat.id}
+                    className="p-3.5 rounded-2xl bg-[#FBF9F5] border border-[#E8E2D8] hover:border-[#8C6239]/50 transition-all flex flex-col justify-between"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-2 h-2 rounded-full bg-[#8C6239]" />
+                      <span className="font-semibold text-xs text-[#233428] line-clamp-1" title={cat.nome}>
+                        {cat.nome}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#6B665E]">
+                      {count} {count === 1 ? 'produto' : 'produtos'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Empty Collection Helper */}
@@ -246,14 +316,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </select>
 
             {/* Category Filter */}
-            {categories.length > 0 && (
+            {categoryNames.length > 0 && (
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3.5 py-2 rounded-xl bg-[#FBF9F5] border border-[#E8E2D8] text-xs font-medium text-[#2A2723] focus:outline-none focus:ring-2 focus:ring-[#233428]/20"
               >
                 <option value="all">Todas as Categorias</option>
-                {categories.map((c) => (
+                {categoryNames.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Sparkles, Image as ImageIcon, Eye, Check, AlertCircle } from 'lucide-react';
-import { Product, ProductFormData } from '../../types';
+import { Product, ProductFormData, Category } from '../../types';
 import { SAMPLE_ARTISANAL_IMAGES, formatCurrency } from '../../utils/formatters';
 
 interface ProductFormModalProps {
   isOpen: boolean;
   productToEdit?: Product | null;
+  categories: Category[];
   onClose: () => void;
   onSave: (data: ProductFormData) => Promise<void>;
 }
@@ -13,10 +14,13 @@ interface ProductFormModalProps {
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
   productToEdit,
+  categories,
   onClose,
   onSave,
 }) => {
   const isEditing = Boolean(productToEdit);
+
+  const defaultCategory = categories.length > 0 ? categories[0].nome : 'Velas Botânicas';
 
   const [formData, setFormData] = useState<ProductFormData>({
     nome: '',
@@ -25,7 +29,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     preco: 0,
     imagem: '',
     disponivel: true,
-    categoria: 'Velas Botânicas',
+    categoria: defaultCategory,
     destaque: false,
   });
 
@@ -34,6 +38,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fallbackCategory = categories.length > 0 ? categories[0].nome : 'Velas Botânicas';
     if (productToEdit) {
       setFormData({
         nome: productToEdit.nome,
@@ -42,7 +47,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         preco: productToEdit.preco,
         imagem: productToEdit.imagem,
         disponivel: productToEdit.disponivel,
-        categoria: productToEdit.categoria || 'Velas Botânicas',
+        categoria: productToEdit.categoria || fallbackCategory,
         destaque: Boolean(productToEdit.destaque),
       });
     } else {
@@ -53,13 +58,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         preco: 75.0,
         imagem: SAMPLE_ARTISANAL_IMAGES[0].url,
         disponivel: true,
-        categoria: 'Velas Botânicas',
+        categoria: fallbackCategory,
         destaque: false,
       });
     }
     setFormError(null);
     setShowGallery(false);
-  }, [productToEdit, isOpen]);
+  }, [productToEdit, isOpen, categories]);
 
   if (!isOpen) return null;
 
@@ -184,11 +189,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#E8E2D8] text-sm text-[#2A2723] focus:outline-none focus:ring-2 focus:ring-[#233428]/20 focus:border-[#233428] transition-all"
                     >
-                      <option value="Velas Botânicas">Velas Botânicas</option>
-                      <option value="Aromaterapia">Aromaterapia</option>
-                      <option value="Cerâmica Artesanal">Cerâmica Artesanal</option>
-                      <option value="Autocuidado">Autocuidado</option>
-                      <option value="Outros">Outros</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.nome}>
+                          {c.nome}
+                        </option>
+                      ))}
+                      {/* Preserve current product's category if not present in categories collection */}
+                      {formData.categoria &&
+                        !categories.some((c) => c.nome === formData.categoria) && (
+                          <option key={formData.categoria} value={formData.categoria}>
+                            {formData.categoria}
+                          </option>
+                        )}
                     </select>
                   </div>
 

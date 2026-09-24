@@ -44,8 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError('O login foi cancelado.');
       } else if (err.code === 'auth/cancelled-popup-request') {
         // Ignorar cancelamento repetido
+      } else if (err.code === 'auth/unauthorized-domain') {
+        const currentHost = window.location.hostname;
+        setError(
+          `O domínio "${currentHost}" não está na lista de domínios autorizados do Firebase Authentication. Adicione "${currentHost}" em Firebase Console > Authentication > Settings > Authorized domains.`
+        );
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('A janela de login com o Google foi bloqueada pelo navegador. Permita pop-ups para este site.');
       } else {
-        setError('Falha na autenticação com o Google. Tente novamente.');
+        setError(err.message || 'Falha na autenticação com o Google. Tente novamente.');
       }
       return false;
     }

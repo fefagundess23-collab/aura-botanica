@@ -86,7 +86,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ isOpen, onClose, onSucce
           <div className="p-4 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] mb-6 flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold mb-0.5">Usuário não autorizado</p>
+              <p className="font-semibold mb-0.5">
+                {error ? 'Aviso de Autenticação' : 'Usuário não autorizado'}
+              </p>
               <p className="leading-relaxed">
                 {error ||
                   `A conta conectada (${user?.email || 'visitante'}) não tem privilégios de administrador. Faça login com uma das contas autorizadas (${ADMIN_EMAILS.join(' ou ')}).`}

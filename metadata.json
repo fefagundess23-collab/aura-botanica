@@ -2,5 +2,7 @@
   "name": "Aura Botânica - Catálogo de Produtos Artesanais",
   "description": "Catálogo online e painel administrativo da Aura Botânica, marca independente de aromaterapia, velas botânicas e autocuidado.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

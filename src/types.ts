@@ -12,6 +12,12 @@ export interface Product {
   updatedAt?: any;
 }
 
+export interface Category {
+  id: string;
+  nome: string;
+  createdAt?: any;
+}
+
 export interface ProductFormData {
   nome: string;
   descricao: string;

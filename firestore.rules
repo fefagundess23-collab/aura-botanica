@@ -51,6 +51,13 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidCategory(data) {
+      return data.keys().hasAll(['nome', 'createdAt']) &&
+        data.keys().hasOnly(['nome', 'createdAt']) &&
+        data.nome is string && data.nome.size() >= 2 && data.nome.size() <= 60 &&
+        data.createdAt is timestamp;
+    }
+
     // Products catalog
     match /products/{productId} {
       allow read: if true;
@@ -65,6 +72,16 @@ service cloud.firestore {
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time;
       allow delete: if isAdmin() && isValidId(productId);
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+        isValidId(categoryId) &&
+        isValidCategory(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update, delete: if false;
     }
 
     // Brand and store public settings (WhatsApp number, social links, brand name)

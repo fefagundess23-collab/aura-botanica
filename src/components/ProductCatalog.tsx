@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
-import { Product, BrandSettings } from '../types';
+import { Product, BrandSettings, Category } from '../types';
 import { ProductCard } from './ProductCard';
 
 interface ProductCatalogProps {
   products: Product[];
+  categories?: Category[];
   brandSettings: BrandSettings;
   loading: boolean;
   error: Error | null;
@@ -14,6 +15,7 @@ interface ProductCatalogProps {
 
 export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   products,
+  categories = [],
   brandSettings,
   loading,
   error,
@@ -24,16 +26,21 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [onlyAvailable, setOnlyAvailable] = useState<boolean>(false);
 
-  // Extract unique categories
-  const categories = useMemo(() => {
+  // Extract unique categories from Firestore categories collection and products
+  const categoryNames = useMemo(() => {
     const list = new Set<string>();
+    if (categories && categories.length > 0) {
+      categories.forEach((c) => {
+        if (c.nome && c.nome.trim()) list.add(c.nome.trim());
+      });
+    }
     products.forEach((p) => {
       if (p.categoria && p.categoria.trim()) {
         list.add(p.categoria.trim());
       }
     });
     return Array.from(list);
-  }, [products]);
+  }, [categories, products]);
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -122,7 +129,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
             >
               Todos ({products.length})
             </button>
-            {categories.map((cat) => (
+            {categoryNames.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
