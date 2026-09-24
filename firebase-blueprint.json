@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Produto",
+      "description": "Item do catálogo da marca com detalhes, precificação e disponibilidade.",
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string",
+          "description": "Nome do produto artesanal.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "descricao": {
+          "type": "string",
+          "description": "Descrição detalhada do produto, benefícios e especificações.",
+          "minLength": 5,
+          "maxLength": 3000
+        },
+        "descricaoCurta": {
+          "type": "string",
+          "description": "Breve resumo para exibição rápida nos cards do catálogo.",
+          "maxLength": 250
+        },
+        "preco": {
+          "type": "number",
+          "description": "Preço do produto em reais (BRL)."
+        },
+        "imagem": {
+          "type": "string",
+          "description": "URL da foto do produto.",
+          "maxLength": 2048
+        },
+        "disponivel": {
+          "type": "boolean",
+          "description": "Indicação se o produto está disponível ou esgotado."
+        },
+        "categoria": {
+          "type": "string",
+          "description": "Categoria do produto (ex: Velas, Aromaterapia, Cerâmica).",
+          "maxLength": 80
+        },
+        "destaque": {
+          "type": "boolean",
+          "description": "Indica se o produto deve aparecer na seção de destaques da vitrine."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp de criação do registro no servidor."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp da última atualização do registro no servidor."
+        }
+      },
+      "required": ["nome", "descricao", "preco", "imagem", "disponivel"]
+    },
+    "BrandSettings": {
+      "title": "Configurações da Marca",
+      "description": "Dados de contato, número do WhatsApp e apresentação da marca.",
+      "type": "object",
+      "properties": {
+        "brandName": {
+          "type": "string",
+          "description": "Nome da marca.",
+          "maxLength": 100
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "description": "Número internacional do WhatsApp para atendimento (ex: 5511999999999).",
+          "maxLength": 30
+        },
+        "whatsappMessage": {
+          "type": "string",
+          "description": "Mensagem padrão para o início da conversa no WhatsApp.",
+          "maxLength": 300
+        },
+        "instagramHandle": {
+          "type": "string",
+          "description": "Perfil do Instagram da marca.",
+          "maxLength": 80
+        },
+        "aboutText": {
+          "type": "string",
+          "description": "Texto institucional sobre a história e valores da marca.",
+          "maxLength": 2000
+        },
+        "emailContact": {
+          "type": "string",
+          "description": "E-mail para contato da marca.",
+          "maxLength": 120
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp da última alteração das configurações."
+        }
+      },
+      "required": ["brandName", "whatsappNumber"]
+    },
+    "AdminUser": {
+      "title": "Administrador",
+      "description": "Registro de permissão para administradores autorizados do sistema.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "E-mail Google do administrador.",
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "description": "Nível de acesso (ex: admin).",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Data de concessão do privilégio."
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": {
+        "$ref": "#/entities/Product"
+      },
+      "description": "Catálogo completo de produtos da marca."
+    },
+    "/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/BrandSettings"
+      },
+      "description": "Configurações gerais e dados de contato da marca."
+    },
+    "/admins/{adminUid}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Lista de UIDs autorizados a gerenciar produtos e configurações."
+    }
+  }
+}
